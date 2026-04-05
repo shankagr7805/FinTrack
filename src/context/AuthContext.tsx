@@ -56,11 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             role: isDefaultAdmin ? 'admin' : 'viewer',
             name: firebaseUser.displayName || 'User',
           };
-          await setDoc(userDocRef, {
-            email: userData.email,
-            role: userData.role,
-            name: userData.name,
-          });
+          try { await setDoc(userDocRef, { email: userData.email, role: userData.role, name: userData.name }); } catch (e) { console.error("Firestore user creation failed:", e); }
         }
         
         setUser(userData);
@@ -124,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (user) {
       try {
         const userDocRef = doc(db, 'users', user.id);
-        await setDoc(userDocRef, { role }, { merge: true });
+        try { await setDoc(userDocRef, { email: userData.email, role: userData.role, name: userData.name }); } catch (e) { console.error("Firestore user creation failed:", e); }
         setUser({ ...user, role });
       } catch (error) {
         console.error("Failed to switch role:", error);
@@ -146,3 +142,4 @@ export function useAuth() {
   }
   return context;
 }
+
