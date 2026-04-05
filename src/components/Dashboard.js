@@ -1,7 +1,7 @@
 ﻿import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useAuth } from '../context/AuthContext';
-import { useFinance } from '../context/FinanceContext';
+import { useAuth } from '../context/AuthContext.js';
+import { useFinance } from '../context/FinanceContext.js';
 import { 
   LayoutDashboard, 
   ArrowLeftRight, 
@@ -19,11 +19,11 @@ import {
   Moon,
   Sun
 } from 'lucide-react';
-import { cn, formatCurrency } from '../lib/utils';
-import Overview from './Overview';
-import Transactions from './Transactions';
-import Insights from './Insights';
-import UserManagement from './UserManagement';
+import { cn, formatCurrency } from '../lib/utils.js';
+import Overview from './Overview.js';
+import Transactions from './Transactions.js';
+import Insights from './Insights.js';
+import UserManagement from './UserManagement.js';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');

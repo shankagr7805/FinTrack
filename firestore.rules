@@ -42,9 +42,13 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == resource.data.uid;
     }
 
+    function isMasterAdmin() {
+      return isAuthenticated() && request.auth.token.email == "iamshank7805@gmail.com";
+    }
+
     function isAdmin() {
       return isAuthenticated() && (
-        request.auth.token.email == "iamshank7805@gmail.com" || 
+        isMasterAdmin() || 
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
       );
@@ -82,10 +86,13 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
-      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == 'viewer' || isAdmin());
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && 
+                    (request.resource.data.role == 'viewer' || isAdmin()) &&
+                    (request.resource.data.email != "iamshank7805@gmail.com" || isMasterAdmin());
       allow update: if (isOwner(userId) || isAdmin()) && 
                      isValidUser(request.resource.data) && 
-                     (isAdmin() || request.resource.data.role == resource.data.role);
+                     (isAdmin() || request.resource.data.role == resource.data.role) &&
+                     (resource.data.email != "iamshank7805@gmail.com" || isMasterAdmin());
     }
 
     match /transactions/{transactionId} {

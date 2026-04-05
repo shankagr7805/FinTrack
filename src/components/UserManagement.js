@@ -8,10 +8,10 @@ import {
   query, 
   orderBy
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from '../firebase.js';
 import { Shield, Eye, User as UserIcon, Search, X } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { useAuth } from '../context/AuthContext';
+import { cn } from '../lib/utils.js';
+import { useAuth } from '../context/AuthContext.js';
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);

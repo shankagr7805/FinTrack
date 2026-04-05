@@ -1,5 +1,5 @@
 ﻿import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth, googleProvider } from '../firebase';
+import { auth, googleProvider } from '../firebase.js';
 import { 
   onAuthStateChanged, 
   signInWithPopup, 
@@ -10,7 +10,7 @@ import {
   sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from '../firebase.js';
 
 const AuthContext = createContext(undefined);
 

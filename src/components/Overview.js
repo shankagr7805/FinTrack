@@ -11,8 +11,8 @@ import {
   XAxis,
   YAxis
 } from 'recharts';
-import { useFinance } from '../context/FinanceContext';
-import { cn, formatCurrency } from '../lib/utils';
+import { useFinance } from '../context/FinanceContext.js';
+import { cn, formatCurrency } from '../lib/utils.js';
 import { Wallet, ArrowUpRight, ArrowDownRight, TrendingUp } from 'lucide-react';
 import { format, subDays, subMonths, isWithinInterval, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns';
 

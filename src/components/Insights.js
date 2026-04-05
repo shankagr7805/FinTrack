@@ -1,6 +1,6 @@
 import React from 'react';
-import { useFinance } from '../context/FinanceContext';
-import { cn, formatCurrency } from '../lib/utils';
+import { useFinance } from '../context/FinanceContext.js';
+import { cn, formatCurrency } from '../lib/utils.js';
 import { 
   Lightbulb, 
   TrendingUp, 

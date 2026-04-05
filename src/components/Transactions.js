@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useFinance } from '../context/FinanceContext';
-import { useAuth } from '../context/AuthContext';
+import { useFinance } from '../context/FinanceContext.js';
+import { useAuth } from '../context/AuthContext.js';
 import { 
   Plus, 
   Search, 
@@ -12,8 +12,8 @@ import {
   ArrowDownCircle,
   X
 } from 'lucide-react';
-import { cn, formatCurrency } from '../lib/utils';
-import { CATEGORIES } from '../constants';
+import { cn, formatCurrency } from '../lib/utils.js';
+import { CATEGORIES } from '../constants.js';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function Transactions() {

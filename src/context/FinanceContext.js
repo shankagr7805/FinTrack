@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { useAuth } from './AuthContext';
+import { useAuth } from './AuthContext.js';
 import { 
   collection, 
   query, 
@@ -11,7 +11,7 @@ import {
   updateDoc,
   orderBy
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from '../firebase.js';
 
 const OperationType = {
   CREATE: 'create',

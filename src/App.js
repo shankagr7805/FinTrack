@@ -1,7 +1,7 @@
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { FinanceProvider } from './context/FinanceContext';
-import AuthPage from './components/AuthPage';
-import Dashboard from './components/Dashboard';
+import { AuthProvider, useAuth } from './context/AuthContext.js';
+import { FinanceProvider } from './context/FinanceContext.js';
+import AuthPage from './components/AuthPage.js';
+import Dashboard from './components/Dashboard.js';
 
 function AppContent() {
   const { isAuthenticated, isAuthReady } = useAuth();
