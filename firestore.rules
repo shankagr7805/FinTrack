@@ -1,0 +1,105 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: transactions
+    // Document ID: auto-generated
+    // Fields:
+    //   - date: string (required, format: YYYY-MM-DD)
+    //   - amount: number (required, positive)
+    //   - category: string (required)
+    //   - type: string (required, enum: ['income', 'expense'])
+    //   - description: string (required, max size: 500)
+    //   - userEmail: string (required, format: email)
+    //   - uid: string (required, matches auth.uid)
+    //
+    // Collection: users
+    // Document ID: auth.uid
+    // Fields:
+    //   - email: string (required, format: email)
+    //   - role: string (required, enum: ['admin', 'viewer'])
+    //   - name: string (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == "iamshank7805@gmail.com" || 
+        request.auth.token.email == "anjiagrawal357@gmail.com" ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}$");
+    }
+
+    function isValidTransaction(data) {
+      return data.keys().hasAll(['date', 'amount', 'category', 'type', 'description', 'userEmail', 'uid']) &&
+             isValidDateString(data.date) &&
+             data.amount is number && data.amount > 0 &&
+             data.category is string && data.category.size() > 0 && data.category.size() < 50 &&
+             data.type in ['income', 'expense'] &&
+             data.description is string && data.description.size() < 500 &&
+             isValidEmail(data.userEmail) &&
+             data.uid == request.auth.uid;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'role', 'name']) &&
+             isValidEmail(data.email) &&
+             data.role in ['admin', 'viewer'] &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100;
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == 'viewer' || isAdmin());
+      allow update: if (isOwner(userId) || isAdmin()) && 
+                     isValidUser(request.resource.data) && 
+                     (isAdmin() || request.resource.data.role == resource.data.role);
+    }
+
+    match /transactions/{transactionId} {
+      // All authenticated users can see all transactions
+      allow read: if isAuthenticated();
+      
+      // Only Admins can add, edit, or delete
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}
