@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, TrendingUp, Mail, UserPlus, ArrowLeft } from 'lucide-react';
+import { LogIn, TrendingUp, Mail, UserPlus, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 export default function AuthPage() {
   const { login, loginWithEmail, signup, resetPassword } = useAuth();
-  const [mode, setMode] = useState<'initial' | 'login' | 'signup' | 'forgot-password'>('initial');
+  const [mode, setMode] = useState('initial');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const getErrorMessage = (err: any) => {
+  const getErrorMessage = (err) => {
     const code = err.code || '';
     switch (code) {
       case 'auth/popup-closed-by-user':
@@ -44,14 +45,14 @@ export default function AuthPage() {
     setLoading(true);
     try {
       await login();
-    } catch (err: any) {
+    } catch (err) {
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
+  const handleEmailAuth = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
@@ -65,7 +66,7 @@ export default function AuthPage() {
         await resetPassword(email);
         setSuccess('Password reset email sent! Please check your inbox.');
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
@@ -184,14 +185,23 @@ export default function AuthPage() {
               </button>
             )}
           </div>
-          <input
-            type="password"
-            required
-            className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              required
+              className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white pr-10"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
       )}
 

@@ -25,10 +25,8 @@ import Transactions from './Transactions';
 import Insights from './Insights';
 import UserManagement from './UserManagement';
 
-type Tab = 'overview' | 'transactions' | 'insights' | 'users';
-
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [activeTab, setActiveTab] = useState('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('fin_theme');
@@ -51,7 +49,7 @@ export default function Dashboard() {
 
   const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
 
-  const handleDateChange = (type: 'start' | 'end', value: string) => {
+  const handleDateChange = (type, value) => {
     const newRange = {
       start: type === 'start' ? value : (dateRange?.start || ''),
       end: type === 'end' ? value : (dateRange?.end || ''),
@@ -122,7 +120,7 @@ export default function Dashboard() {
                 <button
                   key={item.id}
                   onClick={() => {
-                    setActiveTab(item.id as Tab);
+                    setActiveTab(item.id);
                     setIsSidebarOpen(false);
                   }}
                   className={cn(
@@ -145,34 +143,47 @@ export default function Dashboard() {
                 <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center text-indigo-600 dark:text-indigo-400">
                   <User className="w-4 h-4" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{user?.name}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email}</p>
-                </div>
+                  <div className="flex flex-col">
+                    <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user?.name}</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate -mt-0.5">{user?.email}</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className={cn(
+                        "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest",
+                        user?.role === 'admin' 
+                          ? "bg-indigo-600 text-white shadow-sm shadow-indigo-500/20" 
+                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400"
+                      )}>
+                        {user?.role === 'admin' ? <Shield className="w-2.5 h-2.5" /> : <Eye className="w-2.5 h-2.5" />}
+                        {user?.role}
+                      </span>
+                    </div>
+                  </div>
               </div>
               
-              <div className="flex items-center justify-between gap-2 p-1 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
-                <button
-                  onClick={() => switchRole('admin')}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-1 py-1 rounded text-[10px] font-bold transition-all",
-                    user?.role === 'admin' ? "bg-indigo-600 text-white" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
-                  )}
-                >
-                  <Shield className="w-3 h-3" />
-                  Admin
-                </button>
-                <button
-                  onClick={() => switchRole('viewer')}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-1 py-1 rounded text-[10px] font-bold transition-all",
-                    user?.role === 'viewer' ? "bg-indigo-600 text-white" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
-                  )}
-                >
-                  <Eye className="w-3 h-3" />
-                  Viewer
-                </button>
-              </div>
+              {isMasterAdmin && (
+                <div className="flex items-center justify-between gap-2 p-1 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
+                  <button
+                    onClick={() => switchRole('admin')}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-1 py-1 rounded text-[10px] font-bold transition-all",
+                      user?.role === 'admin' ? "bg-indigo-600 text-white" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    )}
+                  >
+                    <Shield className="w-3 h-3" />
+                    Admin
+                  </button>
+                  <button
+                    onClick={() => switchRole('viewer')}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-1 py-1 rounded text-[10px] font-bold transition-all",
+                      user?.role === 'viewer' ? "bg-indigo-600 text-white" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    )}
+                  >
+                    <Eye className="w-3 h-3" />
+                    Viewer
+                  </button>
+                </div>
+              )}
             </div>
 
             <button
@@ -189,43 +200,53 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
-        <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 sticky top-0 z-30 transition-colors">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg lg:hidden"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white capitalize">{activeTab}</h1>
+        <header className="min-h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between px-4 sm:px-6 sticky top-0 z-30 transition-colors py-3 md:py-0 gap-4">
+          <div className="flex items-center justify-between md:justify-start gap-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg lg:hidden"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white capitalize">{activeTab}</h1>
+            </div>
+            
+            {/* Mobile-only summary stats (simplified) */}
+            <div className="flex md:hidden items-center gap-3">
+              <div className="text-right">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-none mb-1">Balance</p>
+                <p className="text-xs font-bold text-slate-900 dark:text-white">{formatCurrency(summary.totalBalance)}</p>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 hover:border-indigo-300 dark:hover:border-indigo-500 transition-colors">
-              <CalendarIcon className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">From</span>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4">
+            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2 sm:px-3 py-1.5 hover:border-indigo-300 dark:hover:border-indigo-500 transition-colors">
+              <CalendarIcon className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span className="hidden xs:inline text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">From</span>
                 <input
                   type="date"
                   value={dateRange?.start || ''}
                   onChange={(e) => handleDateChange('start', e.target.value)}
-                  className="bg-transparent text-xs font-bold text-slate-600 dark:text-slate-300 outline-none cursor-pointer [color-scheme:light] dark:[color-scheme:dark]"
+                  className="bg-transparent text-[11px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 outline-none cursor-pointer [color-scheme:light] dark:[color-scheme:dark] w-[95px] sm:w-auto"
                 />
               </div>
-              <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1" />
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">To</span>
+              <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-0.5 sm:mx-1" />
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span className="hidden xs:inline text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">To</span>
                 <input
                   type="date"
                   value={dateRange?.end || ''}
                   onChange={(e) => handleDateChange('end', e.target.value)}
-                  className="bg-transparent text-xs font-bold text-slate-600 dark:text-slate-300 outline-none cursor-pointer [color-scheme:light] dark:[color-scheme:dark]"
+                  className="bg-transparent text-[11px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 outline-none cursor-pointer [color-scheme:light] dark:[color-scheme:dark] w-[95px] sm:w-auto"
                 />
               </div>
               {dateRange && (
                 <button 
                   onClick={clearDateRange}
-                  className="ml-2 p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full text-slate-400 dark:text-slate-500 transition-colors"
+                  className="ml-1 p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full text-slate-400 dark:text-slate-500 transition-colors"
                   title="Clear Filter"
                 >
                   <X className="w-3 h-3" />
@@ -233,7 +254,7 @@ export default function Dashboard() {
               )}
             </div>
 
-            <div className="hidden sm:flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-4">
               <div className="text-right">
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {!dateRange ? 'Total Balance' : 'Period Balance'}
@@ -276,6 +297,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
-
-

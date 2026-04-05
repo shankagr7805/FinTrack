@@ -10,17 +10,19 @@ A clean and interactive finance dashboard built with React, Tailwind CSS, and Re
   - List view with filtering by type (Income/Expense).
   - Search functionality by description or category.
   - Role-based actions: Admins can add, edit, and delete transactions; Viewers have read-only access.
-- **Role-Based UI**: Simulate different user roles (Admin/Viewer) with UI behavior changes.
+- **Role-Based UI**: Real role-based access control (RBAC) with Admin and Viewer roles.
 - **Insights Section**: Automated observations based on spending patterns.
-- **Authentication**: Mock signup/login flow.
+- **Authentication**: Real Firebase Authentication supporting Google Sign-In and Email/Password (with Password Reset).
 - **Responsive Design**: Fully functional on mobile, tablet, and desktop.
 - **State Management**: Context API for global state (Auth and Finance).
-- **Persistence**: Data is saved to LocalStorage.
+- **Persistence**: Real-time data synchronization using Cloud Firestore.
 - **Animations**: Smooth transitions using `motion`.
 
 ## Tech Stack
 
 - **Framework**: React 19
+- **Database**: Cloud Firestore
+- **Authentication**: Firebase Auth
 - **Styling**: Tailwind CSS 4
 - **Icons**: Lucide React
 - **Charts**: Recharts
@@ -29,13 +31,14 @@ A clean and interactive finance dashboard built with React, Tailwind CSS, and Re
 
 ## Setup Instructions
 
-1. The application is pre-configured to run in the AI Studio environment.
-2. Dependencies are automatically managed.
+1. The application is pre-configured with Firebase.
+2. Ensure `firebase-applet-config.json` is present in the root directory with your Firebase project credentials.
 3. To start manually:
    ```bash
    npm install
    npm run dev
    ```
+4. **Firestore Rules**: Deploy the provided `firestore.rules` to your Firebase project to enforce security and role-based access.
 
 ## Design Decisions
 

@@ -1,6 +1,4 @@
-import { Transaction } from './types';
-
-export const MOCK_TRANSACTIONS: Transaction[] = [
+export const MOCK_TRANSACTIONS = [
   // April 2026
   { id: 'apr-1', date: '2026-04-01', amount: 3500, category: 'Salary', type: 'income', description: 'Monthly Salary' },
   { id: 'apr-2', date: '2026-04-02', amount: 150, category: 'Groceries', type: 'expense', description: 'Weekly Groceries' },

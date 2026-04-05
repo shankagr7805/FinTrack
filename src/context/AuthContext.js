@@ -1,5 +1,4 @@
 ﻿import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserRole, AuthState } from '../types';
 import { auth, googleProvider } from '../firebase';
 import { 
   onAuthStateChanged, 
@@ -8,67 +7,67 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
-  sendPasswordResetEmail,
-  User as FirebaseUser
+  sendPasswordResetEmail
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 
-interface AuthContextType extends AuthState {
-  login: () => Promise<void>;
-  loginWithEmail: (email: string, pass: string) => Promise<void>;
-  signup: (email: string, pass: string, name: string) => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  logout: () => Promise<void>;
-  switchRole: (role: UserRole) => Promise<void>;
-  isAuthReady: boolean;`n  isMasterAdmin: boolean;
-}
+const AuthContext = createContext(undefined);
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAuthReady, setIsAuthReady] = useState(false);`n  const isMasterAdmin = user?.email === "iamshank7805@gmail.com";
+  const [isAuthReady, setIsAuthReady] = useState(false);
+  const isMasterAdmin = user?.email === 'iamshank7805@gmail.com';
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let unsubscribeUserDoc = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const allowedEmails = ['iamshank7805@gmail.com'];
-        
         const userDocRef = doc(db, 'users', firebaseUser.uid);
+        
+        // Initial check and creation if needed
         const userDoc = await getDoc(userDocRef);
-        
-        let userData: User;
-        
-        if (userDoc.exists()) {
-          userData = {
-            id: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            role: userDoc.data().role as UserRole,
-            name: userDoc.data().name || firebaseUser.displayName || 'User',
-          };
-        } else {
+        if (!userDoc.exists()) {
           const isDefaultAdmin = firebaseUser.email && allowedEmails.includes(firebaseUser.email);
-          userData = {
-            id: firebaseUser.uid,
+          await setDoc(userDocRef, {
             email: firebaseUser.email || '',
             role: isDefaultAdmin ? 'admin' : 'viewer',
             name: firebaseUser.displayName || 'User',
-          };
-          try { await setDoc(userDocRef, { email: userData.email, role: userData.role, name: userData.name }); } catch (e) { console.error("Firestore user creation failed:", e); }
+          });
         }
-        
-        setUser(userData);
-        setIsAuthenticated(true);
+
+        // Listen for real-time updates to the user document
+        unsubscribeUserDoc = onSnapshot(userDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+            setUser({
+              id: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              role: docSnap.data().role,
+              name: docSnap.data().name || firebaseUser.displayName || 'User',
+            });
+            setIsAuthenticated(true);
+          }
+        }, (error) => {
+          console.error("Error listening to user doc:", error);
+        });
       } else {
+        if (unsubscribeUserDoc) {
+          unsubscribeUserDoc();
+          unsubscribeUserDoc = null;
+        }
         setUser(null);
         setIsAuthenticated(false);
       }
       setIsAuthReady(true);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeUserDoc) unsubscribeUserDoc();
+    };
   }, []);
 
   const login = async () => {
@@ -80,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const loginWithEmail = async (email: string, pass: string) => {
+  const loginWithEmail = async (email, pass) => {
     try {
       await signInWithEmailAndPassword(auth, email, pass);
     } catch (error) {
@@ -89,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signup = async (email: string, pass: string, name: string) => {
+  const signup = async (email, pass, name) => {
     try {
       const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, pass);
       await updateProfile(firebaseUser, { displayName: name });
@@ -99,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const resetPassword = async (email: string) => {
+  const resetPassword = async (email) => {
     try {
       await sendPasswordResetEmail(auth, email);
     } catch (error) {
@@ -116,11 +115,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const switchRole = async (role: UserRole) => {
+  const switchRole = async (role) => {
     if (user) {
+      // Only Master Admin can switch their own role via this quick-switch
+      if (user.email !== 'iamshank7805@gmail.com') {
+        console.error("Only Master Admin can use quick-switch.");
+        return;
+      }
+
       try {
         const userDocRef = doc(db, 'users', user.id);
-        try { await setDoc(userDocRef, { email: userData.email, role: userData.role, name: userData.name }); } catch (e) { console.error("Firestore user creation failed:", e); }
+        await setDoc(userDocRef, { role }, { merge: true });
         setUser({ ...user, role });
       } catch (error) {
         console.error("Failed to switch role:", error);
@@ -142,5 +147,3 @@ export function useAuth() {
   }
   return context;
 }
-
-

@@ -20,13 +20,13 @@ export default function Transactions() {
   const { transactions, addTransaction, deleteTransaction, editTransaction } = useFinance();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
-  const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
+  const [filterType, setFilterType] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<any>(null);
+  const [editingTransaction, setEditingTransaction] = useState(null);
 
   const isAdmin = user?.role === 'admin';
 
-  const canManage = (t: any) => isAdmin;
+  const canManage = (t) => isAdmin;
 
   const filteredTransactions = transactions
     .filter(t => {
@@ -37,15 +37,15 @@ export default function Transactions() {
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data = {
-      description: formData.get('description') as string,
-      amount: parseFloat(formData.get('amount') as string),
-      category: formData.get('category') as string,
-      type: formData.get('type') as 'income' | 'expense',
-      date: formData.get('date') as string,
+      description: formData.get('description'),
+      amount: parseFloat(formData.get('amount')),
+      category: formData.get('category'),
+      type: formData.get('type'),
+      date: formData.get('date'),
     };
 
     if (editingTransaction) {
@@ -74,7 +74,7 @@ export default function Transactions() {
         
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="flex p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
-              {(['all', 'income', 'expense'] as const).map((type) => (
+              {['all', 'income', 'expense'].map((type) => (
                 <button
                   key={type}
                   onClick={() => setFilterType(type)}
@@ -105,9 +105,68 @@ export default function Transactions() {
           </div>
       </div>
 
-      {/* Table */}
+      {/* Table / Card View */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile Card View */}
+        <div className="block sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
+          {filteredTransactions.length === 0 ? (
+            <div className="px-6 py-12 text-center">
+              <p className="text-slate-500 dark:text-slate-400">No transactions found.</p>
+            </div>
+          ) : (
+            filteredTransactions.map((t) => (
+              <div key={t.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center",
+                      t.type === 'income' ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" : "bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400"
+                    )}>
+                      {t.type === 'income' ? <ArrowUpCircle className="w-4 h-4" /> : <ArrowDownCircle className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{t.description}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">{t.category}</p>
+                    </div>
+                  </div>
+                  <p className={cn(
+                    "text-sm font-black",
+                    t.type === 'income' ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                  )}>
+                    {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                    {new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                  {canManage(t) && (
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => {
+                          setEditingTransaction(t);
+                          setIsModalOpen(true);
+                        }}
+                        className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button 
+                        onClick={() => deleteTransaction(t.id)}
+                        className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">

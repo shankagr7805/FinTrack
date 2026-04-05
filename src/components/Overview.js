@@ -16,18 +16,16 @@ import { cn, formatCurrency } from '../lib/utils';
 import { Wallet, ArrowUpRight, ArrowDownRight, TrendingUp } from 'lucide-react';
 import { format, subDays, subMonths, isWithinInterval, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns';
 
-const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
-
-type TimeRange = '7d' | '1m' | '3m' | '6m' | '1y';
+const COLORS = ['#6366f1', '#10b981', '#f43f5e', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6'];
 
 export default function Overview() {
   const { transactions, summary, dateRange } = useFinance();
-  const [timeRange, setTimeRange] = useState<TimeRange>('1m');
+  const [timeRange, setTimeRange] = useState('1m');
 
   const trendData = useMemo(() => {
-    let startDate: Date;
-    let endDate: Date = new Date();
-    let interval: 'day' | 'month';
+    let startDate;
+    let endDate = new Date();
+    let interval;
 
     if (dateRange) {
       startDate = new Date(dateRange.start);
@@ -108,7 +106,7 @@ export default function Overview() {
   const categoryData = useMemo(() => {
     return transactions
       .filter(t => t.type === 'expense')
-      .reduce((acc: any[], t) => {
+      .reduce((acc, t) => {
         const existing = acc.find(item => item.name === t.category);
         if (existing) {
           existing.value += t.amount;
@@ -129,9 +127,12 @@ export default function Overview() {
   return (
     <div className="space-y-8">
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         {stats.map((stat, i) => (
-          <div key={i} className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+          <div key={i} className={cn(
+            "bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group",
+            i === 2 && "sm:col-span-2 lg:col-span-1"
+          )}>
             <div className="flex items-center justify-between mb-6">
               <div className={cn(stat.color, "p-4 rounded-2xl text-white shadow-lg group-hover:scale-110 transition-transform duration-300")}>
                 <stat.icon className="w-7 h-7" />
@@ -157,7 +158,7 @@ export default function Overview() {
             </div>
             {!dateRange && (
               <div className="flex p-1 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700">
-                {(['7d', '1m', '3m', '6m', '1y'] as TimeRange[]).map((range) => (
+                {['7d', '1m', '3m', '6m', '1y'].map((range) => (
                   <button
                     key={range}
                     onClick={() => setTimeRange(range)}
@@ -205,7 +206,7 @@ export default function Overview() {
                   }}
                   itemStyle={{ fontSize: '12px', fontWeight: 600, color: '#6366f1' }}
                   labelStyle={{ fontSize: '10px', color: '#94a3b8', marginBottom: '4px', fontWeight: 700 }}
-                  formatter={(val: number) => [formatCurrency(val), 'Balance']}
+                  formatter={(val) => [formatCurrency(val), 'Balance']}
                 />
                 <Area 
                   type="monotone" 
@@ -255,7 +256,7 @@ export default function Overview() {
                     padding: '12px'
                   }}
                   itemStyle={{ color: 'inherit' }}
-                  formatter={(val: number) => [formatCurrency(val), 'Spent']}
+                  formatter={(val) => [formatCurrency(val), 'Spent']}
                 />
               </PieChart>
             </ResponsiveContainer>

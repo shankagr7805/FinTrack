@@ -9,18 +9,18 @@ import {
   orderBy
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { User, UserRole } from '../types';
 import { Shield, Eye, User as UserIcon, Search, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
 
 export default function UserManagement() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const { user: currentUser } = useAuth();
+  const [updatingId, setUpdatingId] = useState(null);
+  const [error, setError] = useState(null);
+  const { user: currentUser, isMasterAdmin } = useAuth();
+  const MASTER_ADMIN_EMAIL = 'iamshank7805@gmail.com';
 
   useEffect(() => {
     fetchUsers();
@@ -34,7 +34,7 @@ export default function UserManagement() {
       const userData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      })) as User[];
+      }));
       setUsers(userData);
     } catch (error) {
       console.error("Failed to fetch users:", error);
@@ -43,19 +43,23 @@ export default function UserManagement() {
     }
   };
 
-  const handleRoleToggle = async (userId: string, currentRole: UserRole) => {
+  const handleRoleToggle = async (userId, currentRole, targetEmail) => {
     if (userId === currentUser?.id) return; // Don't allow self-demotion here for safety
+    if (targetEmail === MASTER_ADMIN_EMAIL && !isMasterAdmin) {
+      setError("Only the Master Admin can manage their own role.");
+      return;
+    }
     
     setUpdatingId(userId);
     setError(null);
-    const newRole: UserRole = currentRole === 'admin' ? 'viewer' : 'admin';
+    const newRole = currentRole === 'admin' ? 'viewer' : 'admin';
     
     try {
       await updateDoc(doc(db, 'users', userId), {
         role: newRole
       });
       setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to update user role:", error);
       setError(error.message.includes('insufficient permissions') 
         ? "Permission denied. Please ensure you are an admin and your Firestore rules are updated." 
@@ -157,9 +161,13 @@ export default function UserManagement() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    {u.id !== currentUser?.id ? (
+                    {u.id === currentUser?.id ? (
+                      <span className="text-xs text-slate-400 italic px-4">Current User</span>
+                    ) : (u.email === MASTER_ADMIN_EMAIL && !isMasterAdmin) ? (
+                      <span className="text-xs text-slate-400 italic px-4">Protected</span>
+                    ) : (
                       <button
-                        onClick={() => handleRoleToggle(u.id, u.role)}
+                        onClick={() => handleRoleToggle(u.id, u.role, u.email)}
                         disabled={updatingId === u.id}
                         className={cn(
                           "inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all",
@@ -182,8 +190,6 @@ export default function UserManagement() {
                           </>
                         )}
                       </button>
-                    ) : (
-                      <span className="text-xs text-slate-400 italic px-4">Current User</span>
                     )}
                   </td>
                 </motion.tr>

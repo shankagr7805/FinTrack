@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { Transaction, FinanceSummary } from '../types';
 import { useAuth } from './AuthContext';
 import { 
   collection, 
@@ -14,44 +13,25 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
-enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
+const OperationType = {
+  CREATE: 'create',
+  UPDATE: 'update',
+  DELETE: 'delete',
+  LIST: 'list',
+  GET: 'get',
+  WRITE: 'write',
+};
 
-interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: any;
-}
+const FinanceContext = createContext(undefined);
 
-interface FinanceContextType {
-  allTransactions: Transaction[];
-  transactions: Transaction[];
-  summary: FinanceSummary;
-  dateRange: { start: string; end: string } | null;
-  setDateRange: (range: { start: string; end: string } | null) => void;
-  addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<void>;
-  deleteTransaction: (id: string) => Promise<void>;
-  editTransaction: (transaction: Transaction) => Promise<void>;
-  isLoading: boolean;
-}
-
-const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
-
-export function FinanceProvider({ children }: { children: React.ReactNode }) {
+export function FinanceProvider({ children }) {
   const { user, isAuthenticated, isAuthReady } = useAuth();
-  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
-  const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
+  const [allTransactions, setAllTransactions] = useState([]);
+  const [dateRange, setDateRange] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const handleFirestoreError = (error: any, operationType: OperationType, path: string | null) => {
-    const errInfo: FirestoreErrorInfo = {
+  const handleFirestoreError = (error, operationType, path) => {
+    const errInfo = {
       error: error instanceof Error ? error.message : String(error),
       authInfo: {
         userId: user?.id,
@@ -70,12 +50,12 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     if (isAuthenticated && user) {
       setIsLoading(true);
       
-      const setupListener = (queryToUse: any) => {
+      const setupListener = (queryToUse) => {
         return onSnapshot(queryToUse, (snapshot) => {
           const data = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
-          })) as Transaction[];
+          }));
           setAllTransactions(data);
           setIsLoading(false);
         }, (error) => {
@@ -127,7 +107,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     };
   }, [transactions]);
 
-  const addTransaction = async (t: Omit<Transaction, 'id'>) => {
+  const addTransaction = async (t) => {
     if (!user) return;
     try {
       await addDoc(collection(db, 'transactions'), {
@@ -140,7 +120,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const deleteTransaction = async (id: string) => {
+  const deleteTransaction = async (id) => {
     try {
       await deleteDoc(doc(db, 'transactions', id));
     } catch (error) {
@@ -148,7 +128,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const editTransaction = async (updated: Transaction) => {
+  const editTransaction = async (updated) => {
     try {
       const { id, ...data } = updated;
       await updateDoc(doc(db, 'transactions', id), data);
