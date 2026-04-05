@@ -21,7 +21,7 @@ interface AuthContextType extends AuthState {
   resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   switchRole: (role: UserRole) => Promise<void>;
-  isAuthReady: boolean;
+  isAuthReady: boolean;`n  isMasterAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,7 +29,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false);`n  const isMasterAdmin = user?.email === "iamshank7805@gmail.com";
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isAuthReady, login, loginWithEmail, signup, resetPassword, logout, switchRole }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, isAuthReady, isMasterAdmin, login, loginWithEmail, signup, resetPassword, logout, switchRole }}>
       {children}
     </AuthContext.Provider>
   );
@@ -142,4 +142,5 @@ export function useAuth() {
   }
   return context;
 }
+
 

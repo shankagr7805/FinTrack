@@ -36,7 +36,7 @@ export default function Dashboard() {
     return saved === 'dark' || !saved;
   });
 
-  const { user, logout, switchRole } = useAuth();
+  const { user, logout, switchRole, isMasterAdmin } = useAuth();
   const { transactions, summary, dateRange, setDateRange } = useFinance();
 
   useEffect(() => {
@@ -276,5 +276,6 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
